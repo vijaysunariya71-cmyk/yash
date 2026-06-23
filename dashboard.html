@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leads Command Center | Admin Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6 font-sans">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-slate-800 pb-6 mb-8 gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-black tracking-tight text-white uppercase"><span class="text-amber-500">Yash Dubai</span> Lead Engine</h1>
+                <p class="text-slate-400 text-sm mt-1">Real-time HNI cross-border optimization prospects matching Google campaigns.</p>
+            </div>
+            <div>
+                <input type="password" id="passkey" placeholder="Enter Admin Access Key" class="bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-amber-500 mr-2">
+                <button onclick="fetchLeads()" class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 text-sm rounded-lg transition cursor-pointer">Load Leads</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl">
+                <div class="text-slate-400 text-xs font-bold uppercase tracking-wider">Total Leads Collected</div>
+                <div id="totalCounter" class="text-3xl font-black text-amber-400 mt-1">0</div>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-x-auto shadow-2xl">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-950 text-slate-400 text-xs uppercase font-bold border-b border-slate-700 tracking-wider">
+                        <th class="p-4">Submission Date</th>
+                        <th class="p-4">Full Name</th>
+                        <th class="p-4">Email Profile</th>
+                        <th class="p-4">WhatsApp Link</th>
+                        <th class="p-4">Investment Budget</th>
+                    </tr>
+                </thead>
+                <tbody id="leadsContainer" class="divide-y divide-slate-700 text-sm">
+                    <tr>
+                        <td colspan="5" class="p-8 text-center text-slate-500">Enter your Admin Access Key above and click "Load Leads".</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function fetchLeads() {
+            const key = document.getElementById('passkey').value;
+            const container = document.getElementById('leadsContainer');
+            
+            if(!key) return alert("Please enter your Access Key!");
+            
+            container.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-amber-500"><i class="fa-solid fa-spinner animate-spin mr-2"></i>Decrypting secure cloud lists...</td></tr>`;
+
+            try {
+                const res = await fetch(`/api/leads?accessKey=${encodeURIComponent(key)}`);
+                if(!res.ok) throw new Error("Incorrect Password or Connection Fault");
+                
+                const data = await res.json();
+                
+                document.getElementById('totalCounter').innerText = data.length;
+                
+                if(data.length === 0) {
+                    container.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-500">Authenticated successfully, but no leads have been submitted yet.</td></tr>`;
+                    return;
+                }
+
+                container.innerHTML = "";
+                data.forEach(item => {
+                    // Normalize object structure safely whether stringified or native JSON
+                    const lead = typeof item === 'string' ? JSON.parse(item) : item;
+                    
+                    const row = document.createElement('tr');
+                    row.className = "hover:bg-slate-750/50 transition";
+                    row.innerHTML = `
+                        <td class="p-4 font-mono text-xs text-slate-400">${lead.timestamp || 'N/A'}</td>
+                        <td class="p-4 font-bold text-white">${lead.name}</td>
+                        <td class="p-4 text-slate-300">${lead.email}</td>
+                        <td class="p-4">
+                            <a href="https://wa.me/${lead.phone.replace(/[^0-9]/g, '')}" target="_blank" class="inline-flex items-center text-emerald-400 hover:underline">
+                                <i class="fa-brands fa-whatsapp mr-1.5 text-base"></i>${lead.phone}
+                            </a>
+                        </td>
+                        <td class="p-4"><span class="bg-amber-500/10 text-amber-400 text-xs px-2.5 py-1 rounded-full font-semibold border border-amber-500/20">${lead.budget}</span></td>
+                    `;
+                    container.appendChild(row);
+                });
+
+            } catch (err) {
+                container.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-rose-500 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Access Denied: Invalid Key provided.</td></tr>`;
+            }
+        }
+    </script>
+</body>
+</html>
